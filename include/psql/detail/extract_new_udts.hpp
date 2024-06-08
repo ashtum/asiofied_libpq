@@ -4,6 +4,8 @@
 #include <psql/detail/type_traits.hpp>
 #include <psql/detail/udt_pair.hpp>
 
+#include <boost/pfr.hpp>
+
 namespace psql
 {
 namespace detail
@@ -47,8 +49,9 @@ struct extract_new_udts_impl<T>
     if (!omp.contains(typeid(T)))
       new_udts.push_back({ user_defined<T>::name, typeid(T) });
 
-    std::apply(
-      [&](auto&&... ms) { (extract_new_udts<decltype(T{}.*ms)>(new_udts, omp), ...); }, user_defined<T>::members);
+    [&]<typename... Ts>(type_tag<std::tuple<Ts...>>) {
+      (extract_new_udts<Ts>(new_udts, omp), ...);
+    }(type_tag<decltype(boost::pfr::structure_to_tuple(std::declval<T>()))>{});
   }
 
   static constexpr void apply(std::vector<udt_pair>& new_udts, const detail::oid_map& omp)

@@ -4,6 +4,7 @@
 #include <psql/detail/size_of.hpp>
 
 #include <boost/endian.hpp>
+#include <boost/pfr.hpp>
 
 #include <span>
 
@@ -100,9 +101,9 @@ struct deserialize_impl<T>
   static void apply(std::span<const char> buffer, T& value)
     requires(is_user_defined_v<T>)
   {
-    verify_member_counts(buffer, std::tuple_size_v<decltype(user_defined<T>::members)>);
+    verify_member_counts(buffer, boost::pfr::tuple_size_v<T>);
     buffer = buffer.subspan(4);
-    std::apply([&](auto&&... ms) { (deserialize_member(buffer, value.*ms), ...); }, user_defined<T>::members);
+    boost::pfr::for_each_field(value, [&](auto& f) { deserialize_member(buffer, f); });
   }
 
   static void apply(std::span<const char> buffer, T& value)

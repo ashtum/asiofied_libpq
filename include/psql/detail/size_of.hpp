@@ -6,6 +6,8 @@
 #include <string>
 #include <string_view>
 
+#include <boost/pfr.hpp>
+
 namespace psql
 {
 namespace detail
@@ -85,7 +87,9 @@ struct size_of_impl<T>
   static constexpr std::size_t apply(const T& value)
     requires(is_user_defined_v<T>)
   {
-    return 4 + std::apply([&](auto&&... ms) { return ((size_of(value.*ms) + 8) + ...); }, user_defined<T>::members);
+    std::size_t sum = 4;
+    boost::pfr::for_each_field(value, [&](auto& f) { sum += size_of(f) + 8; });
+    return sum;
   }
 
   static constexpr std::size_t apply(const T& value)

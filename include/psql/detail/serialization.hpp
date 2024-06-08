@@ -5,6 +5,7 @@
 #include <psql/params.hpp>
 
 #include <boost/endian.hpp>
+#include <boost/pfr.hpp>
 
 #include <array>
 
@@ -114,8 +115,8 @@ struct serialize_impl<T>
   static void apply(const oid_map& omp, std::string& buffer, const T& value)
     requires(is_user_defined_v<T>)
   {
-    serialize<int32_t>(omp, buffer, std::tuple_size_v<decltype(user_defined<T>::members)>);
-    std::apply([&](auto&&... ms) { (serialize_member(omp, buffer, value.*ms), ...); }, user_defined<T>::members);
+    serialize<int32_t>(omp, buffer, boost::pfr::tuple_size_v<T>);
+    boost::pfr::for_each_field(value, [&](const auto& f) { serialize_member(omp, buffer, f); });
   }
 
   static void apply(const oid_map& omp, std::string& buffer, const T& value)

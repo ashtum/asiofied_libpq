@@ -19,22 +19,17 @@ struct Company
   std::vector<Employee> employees;
 };
 
-namespace psql
-{
 template<>
-struct user_defined<Employee>
+struct psql::user_defined<Employee>
 {
-  static constexpr auto name    = "employee";
-  static constexpr auto members = std::tuple{ &Employee::name, &Employee::phone };
+  static constexpr auto name = "employee";
 };
 
 template<>
-struct user_defined<Company>
+struct psql::user_defined<Company>
 {
-  static constexpr auto name    = "company";
-  static constexpr auto members = std::tuple{ &Company::id, &Company::employees };
+  static constexpr auto name = "company";
 };
-}
 
 asio::awaitable<void> async_main(std::string conninfo)
 {
